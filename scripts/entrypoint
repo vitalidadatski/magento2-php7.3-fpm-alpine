@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+
+#deploy auth.json
+/usr/local/bin/envsubst < /docker/config/auth.json.tmpl > /root/.composer/auth.json || cat /root/.composer/auth.json
+
+#deploy .my.cnf
+/usr/local/bin/envsubst < /docker/config/my.cnf.tmpl > /root/.my.cnf || cat /root/.my.cnf
+chmod 600 /root/.my.cnf
+
+#deploy ssh keys
+cp -R /tmp/.ssh /root/.ssh
+chmod 700 /root/.ssh
+chmod 644 /root/.ssh/id_rsa.pub
+chmod 600 /root/.ssh/id_rsa
+
+# Ensure our Magento directory exists
+mkdir -p $MAGENTO_ROOT
+
+chown -R :www-data $MAGENTO_ROOT
+
+chown -R www-data:www-data $MAGENTO_ROOT
+
+unset MYSQL_DB_PASSWD
+
+exec "$@"
